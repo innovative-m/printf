@@ -1,51 +1,92 @@
 #include "main.h"
-#include <stdarg.h>
+#include <stdlib.h>
 #include <stdio.h>
 
 /**
-  * _printf - produces outoput according to a format.
-  * @format: format specifier.
-  *
-  * Return: number of characters.
-  */
+ * printIdentifiers - prints special characters
+ * @next: character after the %
+ * @arg: argument for the indentifier
+ * Return: the number of characters printed
+ * (excluding the null byte used to end output to strings)
+ */
+
+int printIdentifiers(char next, va_list arg)
+{
+	int functsIndex;
+
+	identifierStruct functs[] = {
+		{"c", print_char},
+		{"s", print_str},
+		{"d", print_int},
+		{"i", print_int},
+		{"u", print_unsigned},
+		{"b", print_unsignedToBinary},
+		{"o", print_oct},
+		{"x", print_hex},
+		{"X", print_HEX},
+		{"S", print_STR},
+		{NULL, NULL}
+	};
+
+	for (functsIndex = 0; functs[functsIndex].indentifier != NULL; functsIndex++)
+	{
+		if (functs[functsIndex].indentifier[0] == next)
+			return (functs[functsIndex].printer(arg));
+	}
+	return (0);
+}
+
+/**
+ * _printf - mimic printf from stdio
+ * Description: produces output according to a format
+ * write output to stdout, the standard output stream
+ * @format: character string composed of zero or more directives
+ *
+ * Return: the number of characters printed
+ * (excluding the null byte used to end output to strings)
+ * return -1 for incomplete identifier error
+ */
+
 int _printf(const char *format, ...)
 {
-	int i, len_format = 0, charptr;
-	int *num = &charptr;
-	char *ch = (char *)num;
-	char *str;
+	unsigned int i;
+	int identifierPrinted = 0, charPrinted = 0;
+	va_list arg;
 
-	va_list args;
+	va_start(arg, format);
+	if (format == NULL)
+		return (-1);
 
-	va_start(args, format);
-
-	while (format[len_format])
-		len_format++;
-
-	for (i = 0; i < len_format; i++)
+	for (i = 0; format[i] != '\0'; i++)
 	{
-		if (format[i] == 'c')
+		if (format[i] != '%')
 		{
-			charptr = va_arg(args, int);
-			fprintf(stdout, ch);
+			_putchar(format[i]);
+			charPrinted++;
+			continue;
 		}
-
-		else if (format[i] == 's')
+		if (format[i + 1] == '%')
 		{
-			str = va_arg(args, char *);
-			fprintf(stdout, str);
+			_putchar('%');
+			charPrinted++;
+			i++;
+			continue;
 		}
+		if (format[i + 1] == '\0')
+			return (-1);
 
+		identifierPrinted = printIdentifiers(format[i + 1], arg);
+		if (identifierPrinted == -1 || identifierPrinted != 0)
+			i++;
+		if (identifierPrinted > 0)
+			charPrinted += identifierPrinted;
 
-		else if (format[i] == '%')
+		if (identifierPrinted == 0)
 		{
-			fprintf(stdout, "%%");
+			_putchar('%');
+			charPrinted++;
 		}
-
-		else
-			break;
 	}
-
-	return (len_format - 1);
-	va_end(args);
+	va_end(arg);
+	return (charPrinted);
 }
